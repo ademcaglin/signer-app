@@ -10,6 +10,14 @@ function ab2str(buf) {
   return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
+function ab2base64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+function base642ab(base64Str) {
+  return Uint8Array.from(atob(base64Str), c => c.charCodeAt(0));
+}
+
 function base582hex(base58Str) {
   return (
     "0x" +
@@ -50,11 +58,19 @@ function readFileAsArrayBuffer(inputFile) {
   });
 }
 
+/**
+ *
+ * @param {Blob} file
+ * @returns {ArrayBuffer, ArrayBuffer, ArrayBuffer}
+ */
+function getCertificateInfo(file) {}
+
 export {
   ab2str,
   getRandomKey,
   readFileAsArrayBuffer,
   ab2hex,
   base582hex,
-  hex2base58
+  hex2base58,
+  ab2base64
 };

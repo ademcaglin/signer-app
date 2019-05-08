@@ -5,23 +5,9 @@ db.version(1).stores({
 });
 
 export default class CertificateStore {
-  createCertificate(
-    id,
-    name,
-    surname,
-    nationality,
-    dateOfBirth,
-    content,
-    secret
-  ) {
+  createCertificate(cer) {
     db.certificates.add({
-      id,
-      name,
-      surname,
-      nationality,
-      dateOfBirth,
-      content,
-      secret,
+      ...cer,
       state: "NEW"
     });
   }
@@ -30,8 +16,13 @@ export default class CertificateStore {
     db.certificates.delete(id);
   }
 
-  async getAllCertificates() {
-    return await db.certificates.toArray();
+  async getAllCertificates(page, pageSize) {
+    let all = await db.certificates.toArray();
+    let items = all.slice((page - 1) * pageSize, page * pageSize);
+    return {
+      hasMore: all.length - page * pageSize > 0,
+      items: items
+    };
   }
 
   async getCertificate(id) {

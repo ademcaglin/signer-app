@@ -1,45 +1,85 @@
-import React, { useState, useEffect } from "react";
-import CertificateStore from "./indexeddb/certificateStore";
+import { useEffect, useReducer } from "react";
+import { CertificateStore } from "./stores";
 const cerStore = new CertificateStore();
 
+const initialState = {
+  hasMore: false,
+  pageSize: 10,
+  page: 1,
+  items: []
+};
+
+export const reducer = (state, action) => {
+  switch (action.type) {
+    case "fill": {
+      return {
+        ...state,
+        items: action.items,
+        hasMore: action.hasMore,
+        page: action.page,
+        pageSize: action.pageSize
+      };
+    }
+    case "remove": {
+      const idx = state.items.findIndex(t => t.id === action.id);
+      const items = Object.assign([], state.items);
+      items.splice(idx, 1);
+      return {
+        ...state,
+        items: items
+      };
+    }
+    default:
+      return state;
+  }
+};
+
 export default () => {
-  const [certificates, setCertificates] = useState([]);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    async function init() {
-      let items = await cerStore.getAllCertificates();
-      setCertificates(items);
-    }
-    init();
-  }, [createCertificate, removeCertificate]);
+    fillCertificates(1, 4);
+  }, []);
 
-  function createCertificate(
-    id,
-    name,
-    surname,
-    nationality,
-    dateOfBirth,
-    content,
-    secret
-  ) {
-    cerStore.createCertificate(
-      id,
-      name,
-      surname,
-      nationality,
-      dateOfBirth,
-      content,
-      secret
-    );
+  async function fillCertificates(page, pageSize) {
+    let { hasMore, items } = await cerStore.getAllCertificates(page, pageSize);
+    dispatch({
+      type: "fill",
+      page: page,
+      pageSize: pageSize,
+      hasMore: hasMore,
+      items: items
+    });
   }
 
   function removeCertificate(id) {
     cerStore.removeCertificate(id);
+    dispatch({
+      type: "remove",
+      id: id
+    });
   }
 
-  async function saveCertificate(id) {}
+  function uploadCertificate(id) {
+    cerStore.removeCertificate(id);
+    dispatch({
+      type: "upload",
+      id: id
+    });
+  }
 
-  async function signCertificate(id) {}
+  function signCertificate(id) {
+    cerStore.removeCertificate(id);
+    dispatch({
+      type: "sign",
+      id: id
+    });
+  }
 
-  return { certificates, removeCertificate, createCertificate };
+  return {
+    state,
+    removeCertificate,
+    uploadCertificate,
+    signCertificate
+  };
 };

@@ -8,6 +8,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import Button from "@material-ui/core/Button";
 import Icon from "@material-ui/core/Icon";
 import { makeStyles } from "@material-ui/styles";
+import Create from "./Create";
 
 const useStyles = makeStyles({
   root: {
@@ -44,9 +45,7 @@ export default props => {
           <Button color="inherit" component={Link} to="/">
             <Icon className={classes.icon}>home</Icon>
           </Button>
-          <Button color="inherit" component={Link} to="/create">
-            <Icon className={classes.icon}>add</Icon>
-          </Button>
+          <Create />
         </Toolbar>
       </AppBar>
       {props.children}

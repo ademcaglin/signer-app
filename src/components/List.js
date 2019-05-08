@@ -1,90 +1,55 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import useCertificate from "../core/useCertificate";
 import Button from "@material-ui/core/Button";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/styles";
-import { getRandomKey } from "../core/baseUtils";
-import getSampleCertificate from "./SampleCertificate";
+import { pdfjs, Document, Page } from "react-pdf";
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${
+  pdfjs.version
+}/pdf.worker.js`;
 
 const useStyles = makeStyles({
   root: {
-    width: "100%",
-    overflowX: "auto"
+    flexGrow: 1
   },
-  table: {
-    minWidth: 700
+  paper: {
+    height: 140,
+    width: 100
   }
 });
 export default () => {
   const classes = useStyles();
-  const {
-    createCertificate,
-    removeCertificate,
-    certificates
-  } = useCertificate();
+  const { state, removeCertificate } = useCertificate();
 
-  async function createCer() {
-    let info = {
-      name: "Adem",
-      surname: "Caglin",
-      dateOfBirth: "01.01.0001",
-      nationality: "TR"
-    };
-    let pdf = await getSampleCertificate(info);
-    let secret = getRandomKey();
-    createCertificate(
-      secret,
-      info.name,
-      info.surname,
-      info.dateOfBirth,
-      info.nationality,
-      pdf,
-      secret
-    );
-  }
   return (
     <>
-      <Paper className={classes.root}>
-        <Table className={classes.table}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Sur Name</TableCell>
-              <TableCell>Date of Birth</TableCell>
-              <TableCell>Nationalaity</TableCell>
-              <TableCell align="right" />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {certificates.map(cer => {
-              return (
-                <TableRow key={cer.id}>
-                  <TableCell align="left">{cer.name}</TableCell>
-                  <TableCell align="left">{cer.surName}</TableCell>
-                  <TableCell align="left">{cer.dateOfBirth}</TableCell>
-                  <TableCell align="left">{cer.nationality}</TableCell>
-                  <TableCell align="right">
-                    <Button
-                      color="inherit"
-                      onClick={() => {
-                        removeCertificate(cer.id);
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </Paper>
-      <Button onClick={createCer}>Create Cert</Button>
+      <br />
+      <br />
+      <Grid container className={classes.root} spacing={16}>
+        {state.items.map(item => {
+          return (
+            <Grid item xs={6}>
+              <Paper className={classes.root} elevation={1}>
+                <Typography variant="h5" component="h3">
+                  {item.state}
+                  <Button onClick={() => removeCertificate(item.id)}>
+                    Remove
+                  </Button>
+                  <Button>Upload</Button>
+                  <Button>Sign</Button>
+                </Typography>
+                <Typography component="p">
+                  <Document file={item.content}>
+                    <Page key={1} pageNumber={1} />
+                  </Document>
+                </Typography>
+              </Paper>
+            </Grid>
+          );
+        })}
+      </Grid>
     </>
   );
 };
