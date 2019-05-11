@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Text, Page, Document, pdf } from "@react-pdf/renderer";
+import {
+  Text,
+  Page,
+  Document,
+  pdf,
+  StyleSheet,
+  Image
+} from "@react-pdf/renderer";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import Dialog from "@material-ui/core/Dialog";
@@ -15,22 +22,59 @@ import {
   getRandomKey,
   readFileAsArrayBuffer
 } from "../core/baseUtils";
+import QRCode from "qrcode";
 import { CertificateStore } from "../core/stores";
 import { pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${
   pdfjs.version
 }/pdf.worker.js`;
 const cerStore = new CertificateStore();
-
+const styles = StyleSheet.create({
+  body: {
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 5
+  },
+  title: {
+    fontSize: 24,
+    textAlign: "center"
+  },
+  author: {
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 40
+  },
+  subtitle: {
+    fontSize: 18,
+    margin: 12
+  },
+  text: {
+    margin: 12,
+    fontSize: 14,
+    textAlign: "justify",
+    fontFamily: "Times-Roman"
+  },
+  image: {
+    width: 100,
+    height: 100
+  },
+  header: {
+    fontSize: 12,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "grey"
+  }
+});
 const useStyles = makeStyles({});
 
-const SampleCertificate = ({ info }) => (
+const SampleCertificate = ({ info, imgSrc }) => (
   <Document>
-    <Page size="A7">
+    <Page size="A4" style={styles.body}>
       <Text>Name: {info.name}</Text>
       <Text>Surname: {info.surname}</Text>
       <Text>Date Of Birth: {info.dateOfBirth}</Text>
       <Text>Nationality: {info.nationality}</Text>
+      <Image source={info.qr} style={styles.image} />
     </Page>
   </Document>
 );
@@ -57,9 +101,11 @@ const Create = props => {
       dateOfBirth: "01.01.0001",
       nationality: "TR"
     };
-
-    let pdfContent = await getSampleCertificate(info);
     let secret = getRandomKey();
+    let qr = await QRCode.toDataURL(ab2base64(secret));
+    console.log(qr);
+    let pdfContent = await getSampleCertificate({ ...info, qr: qr });
+
     let id = await window.crypto.subtle.digest("SHA-256", secret);
     let cer = {
       id: ab2base64(id),

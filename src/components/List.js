@@ -21,7 +21,7 @@ const useStyles = makeStyles({
 });
 export default () => {
   const classes = useStyles();
-  const { state, removeCertificate } = useCertificate();
+  const { state, removeCertificate, fillCertificates } = useCertificate();
 
   return (
     <>
@@ -33,12 +33,27 @@ export default () => {
             <Grid item xs={6}>
               <Paper className={classes.root} elevation={1}>
                 <Typography variant="h5" component="h3">
-                  {item.state}
-                  <Button onClick={() => removeCertificate(item.id)}>
-                    Remove
-                  </Button>
-                  <Button>Upload</Button>
-                  <Button>Sign</Button>
+                  {item.state === "NEW" && (
+                    <>
+                      <span>New</span>
+                      <Button onClick={() => removeCertificate(item.id)}>
+                        Remove
+                      </Button>
+                      <Button>Upload</Button>
+                    </>
+                  )}
+                  {item.state === "UPLOADED" && (
+                    <>
+                      <span>Uploaded</span>
+                      <Button>Sign</Button>
+                    </>
+                  )}
+                  {item.state === "SIGNED" && (
+                    <>
+                      <span>Signed</span>
+                      <Button>Sign</Button>
+                    </>
+                  )}
                 </Typography>
                 <Typography component="p">
                   <Document file={item.content}>
@@ -50,6 +65,15 @@ export default () => {
           );
         })}
       </Grid>
+      {state.hasMore && (
+        <Button
+          onClick={() => {
+            fillCertificates(state.page + 1, state.pageSize);
+          }}
+        >
+          More...
+        </Button>
+      )}
     </>
   );
 };

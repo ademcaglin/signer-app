@@ -1,5 +1,5 @@
 import Dexie from "dexie";
-import { getEncryptedContent, getRawContent } from "./cryptoUtils";
+import { getEncryptedContent, getRawContent } from "../../cryptoUtils";
 const db = new Dexie("FileDB");
 db.version(1).stores({
   files: "id"
@@ -10,7 +10,7 @@ db.version(1).stores({
  * @param {ArrayBuffer} content
  * @param {ArrayBuffer} secret
  */
-async function saveFile(content, secret) {
+async function uploadFile(content, secret) {
   let encryptedContent = await getEncryptedContent(content, secret);
   let file_address = await crypto.subtle.digest(encryptedContent);
   db.files.add({ id: file_address, content: encryptedContent });
@@ -28,4 +28,4 @@ async function getFile(file_address, secret) {
   return content;
 }
 
-export { saveFile, getFile };
+export { uploadFile, getFile };

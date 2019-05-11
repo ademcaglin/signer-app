@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from "react";
-import { CertificateStore } from "./stores";
+import { CertificateStore, uploadFile } from "./stores";
+import { base642ab } from "./baseUtils";
 const cerStore = new CertificateStore();
 
 const initialState = {
@@ -14,7 +15,7 @@ export const reducer = (state, action) => {
     case "fill": {
       return {
         ...state,
-        items: action.items,
+        items: [...state.items, ...action.items],
         hasMore: action.hasMore,
         page: action.page,
         pageSize: action.pageSize
@@ -60,8 +61,9 @@ export default () => {
     });
   }
 
-  function uploadCertificate(id) {
-    cerStore.removeCertificate(id);
+  async function uploadCertificate(id) {
+    let cer = await cerStore.getCertificate(id);
+    uploadFile(cer.content, base642ab(cer.secret));
     dispatch({
       type: "upload",
       id: id
@@ -80,6 +82,7 @@ export default () => {
     state,
     removeCertificate,
     uploadCertificate,
-    signCertificate
+    signCertificate,
+    fillCertificates
   };
 };
