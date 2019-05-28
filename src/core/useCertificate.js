@@ -1,7 +1,8 @@
 import { useEffect, useReducer } from "react";
-import { CertificateStore, uploadFile } from "./stores";
-import { base642ab } from "./baseUtils";
-const cerStore = new CertificateStore();
+import useCertificateStore from "./stores/useIndexedDbCertificateStore";
+import useDecertStore from "./stores/useIndexedDbDecertStore";
+import { base642ab, ab2hex, hex2base58 } from "./baseUtils";
+import { getEncryptedContent, getRawContent } from "./cryptoUtils";
 
 const initialState = {
   hasMore: false,
@@ -30,6 +31,24 @@ export const reducer = (state, action) => {
         items: items
       };
     }
+    case "upload": {
+      const items = Object.assign([], state.items);
+      return {
+        ...state,
+        items: items.map(item =>
+          item.id === action.id ? { ...item, state: "UPLOADED" } : item
+        )
+      };
+    }
+    case "sign": {
+      const items = Object.assign([], state.items);
+      return {
+        ...state,
+        items: items.map(item =>
+          item.id === action.id ? { ...item, state: "SIGNED" } : item
+        )
+      };
+    }
     default:
       return state;
   }
@@ -37,13 +56,16 @@ export const reducer = (state, action) => {
 
 export default () => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const { getAll, remove, update, create, getById } = useCertificateStore();
+
+  const { sign, getBySecret } = useDecertStore();
 
   useEffect(() => {
     fillCertificates(1, 4);
   }, []);
 
   async function fillCertificates(page, pageSize) {
-    let { hasMore, items } = await cerStore.getAllCertificates(page, pageSize);
+    let { hasMore, items } = await getAll(page, pageSize);
     dispatch({
       type: "fill",
       page: page,
@@ -53,36 +75,46 @@ export default () => {
     });
   }
 
-  function removeCertificate(id) {
-    cerStore.removeCertificate(id);
+  async function removeCertificate(id) {
+    await remove(id);
     dispatch({
       type: "remove",
       id: id
     });
   }
 
-  async function uploadCertificate(id) {
-    let cer = await cerStore.getCertificate(id);
-    uploadFile(cer.content, base642ab(cer.secret));
-    dispatch({
-      type: "upload",
-      id: id
-    });
-  }
-
-  function signCertificate(id) {
-    cerStore.removeCertificate(id);
+  async function signCertificate(id) {
+    let cer = await getById(id);
+    let encryptedContent = await getEncryptedContent(
+      cer.content,
+      base642ab(cer.secret)
+    );
+    let fileAddressAB = await crypto.subtle.digest("SHA-256", encryptedContent);
+    let fileAddress = hex2base58(ab2hex(fileAddressAB));
+    let createdAt = Math.floor(Date.now() / 1000);
+    await sign(id, fileAddress, encryptedContent, createdAt);
+    await update(id, { state: "SIGNED" });
     dispatch({
       type: "sign",
       id: id
     });
   }
 
+  async function getCertificate(secret64) {
+    let secret = base642ab(secret64);
+    let idAB = await crypto.subtle.digest("SHA-256", secret);
+    let id = ab2hex(idAB);
+    let result = await getBySecret(id);
+    let content = await getRawContent(result.content, secret);
+    return Object.assign(result, { content: content });
+  }
+
   return {
     state,
     removeCertificate,
-    uploadCertificate,
     signCertificate,
-    fillCertificates
+    fillCertificates,
+    getCertificate,
+    createCertificate: create
   };
 };

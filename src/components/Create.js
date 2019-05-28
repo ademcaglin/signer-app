@@ -20,15 +20,15 @@ import { withRouter } from "react-router-dom";
 import {
   ab2base64,
   getRandomKey,
-  readFileAsArrayBuffer
+  readFileAsArrayBuffer,
+  ab2hex
 } from "../core/baseUtils";
 import QRCode from "qrcode";
-import { CertificateStore } from "../core/stores";
 import { pdfjs } from "react-pdf";
+import useCertificate from "../core/useCertificate";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${
   pdfjs.version
 }/pdf.worker.js`;
-const cerStore = new CertificateStore();
 const styles = StyleSheet.create({
   body: {
     paddingTop: 10,
@@ -87,6 +87,11 @@ const getSampleCertificate = async info => {
 const Create = props => {
   const classes = useStyles();
   const [open, setOpen] = useState();
+  const [name, setName] = useState();
+  const [surname, setSurname] = useState();
+  const [dateOfBirth, setDateOfBirth] = useState();
+  const [nationality, setNationality] = useState();
+  const { createCertificate } = useCertificate();
   function handleClose() {
     setOpen(false);
   }
@@ -96,10 +101,10 @@ const Create = props => {
 
   async function handleCreate() {
     let info = {
-      name: "Adem",
-      surname: "Caglin",
-      dateOfBirth: "01.01.0001",
-      nationality: "TR"
+      name: name,
+      surname: surname,
+      dateOfBirth: dateOfBirth,
+      nationality: nationality
     };
     let secret = getRandomKey();
     let qr = await QRCode.toDataURL(ab2base64(secret));
@@ -108,12 +113,12 @@ const Create = props => {
 
     let id = await window.crypto.subtle.digest("SHA-256", secret);
     let cer = {
-      id: ab2base64(id),
+      id: ab2hex(id),
       secret: ab2base64(secret),
       content: await readFileAsArrayBuffer(pdfContent)
     };
 
-    cerStore.createCertificate(cer);
+    await createCertificate(cer);
     window.location.reload();
   }
 
@@ -127,7 +132,7 @@ const Create = props => {
         onClose={handleClose}
         aria-labelledby="form-dialog-title"
       >
-        <DialogTitle id="form-dialog-title">Subscribe</DialogTitle>
+        <DialogTitle id="form-dialog-title">Create Certificate</DialogTitle>
         <DialogContent>
           <DialogContentText>
             To create a certificate fill the inputs.
@@ -136,9 +141,34 @@ const Create = props => {
             autoFocus
             margin="dense"
             id="name"
-            label="Email Address"
-            type="email"
+            label="Name"
+            type="text"
             fullWidth
+            onChange={e => setName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            id="surname"
+            label="Surname"
+            type="text"
+            fullWidth
+            onChange={e => setSurname(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            id="dateOfBirth"
+            label="Date of Birth"
+            type="text"
+            fullWidth
+            onChange={e => setDateOfBirth(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            id="nationality"
+            label="Natioanlity"
+            type="text"
+            fullWidth
+            onChange={e => setNationality(e.target.value)}
           />
         </DialogContent>
         <DialogActions>

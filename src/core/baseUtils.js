@@ -58,13 +58,6 @@ function readFileAsArrayBuffer(inputFile) {
   });
 }
 
-/**
- *
- * @param {Blob} file
- * @returns {ArrayBuffer, ArrayBuffer, ArrayBuffer}
- */
-function getCertificateInfo(file) {}
-
 export {
   ab2str,
   getRandomKey,
@@ -72,5 +65,6 @@ export {
   ab2hex,
   base582hex,
   hex2base58,
-  ab2base64
+  ab2base64,
+  base642ab
 };

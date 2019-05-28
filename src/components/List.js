@@ -6,6 +6,7 @@ import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/styles";
 import { pdfjs, Document, Page } from "react-pdf";
+import Verify from "./Verify";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${
   pdfjs.version
 }/pdf.worker.js`;
@@ -21,7 +22,13 @@ const useStyles = makeStyles({
 });
 export default () => {
   const classes = useStyles();
-  const { state, removeCertificate, fillCertificates } = useCertificate();
+  const {
+    state,
+    removeCertificate,
+    fillCertificates,
+    signCertificate
+  } = useCertificate();
+  const [selectedSecret, setSelectedSecret] = useState();
 
   return (
     <>
@@ -39,19 +46,17 @@ export default () => {
                       <Button onClick={() => removeCertificate(item.id)}>
                         Remove
                       </Button>
-                      <Button>Upload</Button>
-                    </>
-                  )}
-                  {item.state === "UPLOADED" && (
-                    <>
-                      <span>Uploaded</span>
-                      <Button>Sign</Button>
+                      <Button onClick={() => signCertificate(item.id)}>
+                        Sign
+                      </Button>
                     </>
                   )}
                   {item.state === "SIGNED" && (
                     <>
                       <span>Signed</span>
-                      <Button>Sign</Button>
+                      <Button onClick={() => setSelectedSecret(item.secret)}>
+                        Verify
+                      </Button>
                     </>
                   )}
                 </Typography>
@@ -74,6 +79,25 @@ export default () => {
           More...
         </Button>
       )}
+      <Verify
+        selectedSecret={selectedSecret}
+        closeView={() => setSelectedSecret("")}
+      />
     </>
   );
 };
+
+/*const [copySuccess, setCopySuccess] = useState("");
+
+  function copyToClipboard(secret) {
+    var textField = document.createElement("textarea");
+    textField.innerText = secret;
+    document.body.appendChild(textField);
+    textField.select();
+    document.execCommand("copy");
+    textField.remove();
+    setCopySuccess("Copied!");
+  }*/
+/*<Button onClick={() => copyToClipboard(item.secret)}>
+                    Copy
+                  </Button>*/
